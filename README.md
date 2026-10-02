@@ -23,3 +23,19 @@ begin
     with identity = 'HTTPEndpointHeaders', secret = '{"api-key":"YOUR_OPENAI_KEY"}';
 end
 go
+
+4. Test the connectivity to Azure OpenAI and see the ability to call external REST endpoints in action. 
+declare @url nvarchar(4000) = N'https://AI_ENDPOINT_SERVERNAME.openai.azure.com/openai/deployments/gpt-4/chat/completions?api-version=2024-06-01';
+declare @payload nvarchar(max) = N'{"messages":[{"role":"system","content":"You are an expert joke teller."},                                   
+                                {"role":"system","content":"tell me a joke about a llama walking into a bar"}]}'
+declare @ret int, @response nvarchar(max);
+
+exec @ret = sp_invoke_external_rest_endpoint
+    @url = @url,
+    @method = 'POST', 
+    @payload = @payload,
+    @credential = [https://AI_ENDPOINT_SERVERNAME.openai.azure.com/],    
+    @timeout = 230,
+    @response = @response output;
+
+select json_value(@response, '$.result.choices[0].message.content') as "Amazing, Awesome, Stupendous Joke";
